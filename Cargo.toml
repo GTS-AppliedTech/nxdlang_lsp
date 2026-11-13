@@ -1,0 +1,17 @@
+[package]
+name = "nxdlang_lsp"
+version = "0.1.0"
+edition = "2024"
+authors = ["Gabriel Ty Spencer"]
+license = "MIT"
+description = "Editor-neutral Language Server Protocol implementation for the NXD programming language"
+repository = "https://github.com/GTS-AppliedTech/nxdlang_lsp"
+
+[dependencies]
+nxd_language = { path = "../nxd_language" }
+
+tower-lsp-server = "0.23"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "io-std", "sync"] }
+
+[profile.release]
+strip = true
