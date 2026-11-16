@@ -1,8 +1,10 @@
 use crate::completion::nxd_completion_items;
 use crate::diagnostics::language_diagnostic_to_lsp;
 use crate::documents::DocumentStore;
+use crate::hover::hover_info_to_lsp;
 
 use nxd_language::diagnostics::validation::validate_source;
+use nxd_language::frontend::hover::hover_at;
 
 use tower_lsp_server::jsonrpc::Result;
 use tower_lsp_server::ls_types::*;
@@ -45,6 +47,8 @@ impl LanguageServer for Backend {
             Some(TextDocumentSyncCapability::Kind(TextDocumentSyncKind::FULL));
 
         result.capabilities.completion_provider = Some(CompletionOptions::default());
+
+        result.capabilities.hover_provider = Some(HoverProviderCapability::Simple(true));
 
         Ok(result)
     }
@@ -92,5 +96,21 @@ impl LanguageServer for Backend {
 
     async fn completion(&self, _: CompletionParams) -> Result<Option<CompletionResponse>> {
         Ok(Some(CompletionResponse::Array(nxd_completion_items())))
+    }
+
+    async fn hover(&self, params: HoverParams) -> Result<Option<Hover>> {
+        let text_document_position = params.text_document_position_params;
+
+        let uri = text_document_position.text_document.uri;
+
+        let position = text_document_position.position;
+
+        let Some(source) = self.documents.get(&uri).await else {
+            return Ok(None);
+        };
+
+        let info = hover_at(&source, position.line + 1, position.character + 1);
+
+        Ok(info.map(hover_info_to_lsp))
     }
 }

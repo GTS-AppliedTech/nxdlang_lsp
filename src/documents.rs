@@ -20,4 +20,8 @@ impl DocumentStore {
     pub async fn remove(&self, uri: &Uri) {
         self.documents.write().await.remove(uri);
     }
+
+    pub async fn get(&self, uri: &Uri) -> Option<String> {
+        self.documents.read().await.get(uri).cloned()
+    }
 }
