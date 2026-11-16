@@ -1,3 +1,4 @@
+use crate::completion::nxd_completion_items;
 use crate::diagnostics::language_diagnostic_to_lsp;
 use crate::documents::DocumentStore;
 
@@ -43,6 +44,8 @@ impl LanguageServer for Backend {
         result.capabilities.text_document_sync =
             Some(TextDocumentSyncCapability::Kind(TextDocumentSyncKind::FULL));
 
+        result.capabilities.completion_provider = Some(CompletionOptions::default());
+
         Ok(result)
     }
 
@@ -85,5 +88,9 @@ impl LanguageServer for Backend {
         self.documents.remove(&uri).await;
 
         self.client.publish_diagnostics(uri, Vec::new(), None).await;
+    }
+
+    async fn completion(&self, _: CompletionParams) -> Result<Option<CompletionResponse>> {
+        Ok(Some(CompletionResponse::Array(nxd_completion_items())))
     }
 }
