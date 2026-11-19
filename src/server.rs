@@ -1,4 +1,6 @@
-use crate::completion::{nxd_completion_items, nxd_member_completion_items};
+use crate::completion::{
+    nxd_completion_items, nxd_member_completion_items, nxd_object_initializer_completion_items,
+};
 use crate::diagnostics::language_diagnostic_to_lsp;
 use crate::documents::DocumentStore;
 use crate::hover::hover_info_to_lsp;
@@ -108,7 +110,11 @@ impl LanguageServer for Backend {
             return Ok(None);
         };
 
-        let items = nxd_member_completion_items(&source, position.line + 1, position.character + 1)
+        let line = position.line + 1;
+        let column = position.character + 1;
+
+        let items = nxd_member_completion_items(&source, line, column)
+            .or_else(|| nxd_object_initializer_completion_items(&source, line, column))
             .unwrap_or_else(nxd_completion_items);
 
         Ok(Some(CompletionResponse::Array(items)))
