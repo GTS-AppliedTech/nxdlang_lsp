@@ -46,7 +46,10 @@ impl LanguageServer for Backend {
         result.capabilities.text_document_sync =
             Some(TextDocumentSyncCapability::Kind(TextDocumentSyncKind::FULL));
 
-        result.capabilities.completion_provider = Some(CompletionOptions::default());
+        result.capabilities.completion_provider = Some(CompletionOptions {
+            trigger_characters: Some(vec![".".to_string()]),
+            ..CompletionOptions::default()
+        });
 
         result.capabilities.hover_provider = Some(HoverProviderCapability::Simple(true));
 
