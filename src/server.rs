@@ -1,4 +1,4 @@
-use crate::completion::nxd_completion_items;
+use crate::completion::{nxd_completion_items, nxd_member_completion_items};
 use crate::diagnostics::language_diagnostic_to_lsp;
 use crate::documents::DocumentStore;
 use crate::hover::hover_info_to_lsp;
@@ -94,8 +94,21 @@ impl LanguageServer for Backend {
         self.client.publish_diagnostics(uri, Vec::new(), None).await;
     }
 
-    async fn completion(&self, _: CompletionParams) -> Result<Option<CompletionResponse>> {
-        Ok(Some(CompletionResponse::Array(nxd_completion_items())))
+    async fn completion(&self, params: CompletionParams) -> Result<Option<CompletionResponse>> {
+        let text_document_position = params.text_document_position;
+
+        let uri = text_document_position.text_document.uri;
+
+        let position = text_document_position.position;
+
+        let Some(source) = self.documents.get(&uri).await else {
+            return Ok(None);
+        };
+
+        let items = nxd_member_completion_items(&source, position.line + 1, position.character + 1)
+            .unwrap_or_else(nxd_completion_items);
+
+        Ok(Some(CompletionResponse::Array(items)))
     }
 
     async fn hover(&self, params: HoverParams) -> Result<Option<Hover>> {
