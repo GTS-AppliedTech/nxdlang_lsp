@@ -1,6 +1,6 @@
 use nxd_language::frontend::completion::{
-    completion_words, member_completion_words, object_initializer_completion_words,
-    scope_completion_words,
+    ScopeCompletionKind, completion_words, member_completion_words,
+    object_initializer_completion_words, scope_completion_words,
 };
 use tower_lsp_server::ls_types::{CompletionItem, CompletionItemKind};
 
@@ -54,13 +54,24 @@ pub fn nxd_scope_completion_items(
     line: u32,
     column: u32,
 ) -> Option<Vec<CompletionItem>> {
-    scope_completion_words(source, line, column).map(|words| {
-        words
+    scope_completion_words(source, line, column).map(|items| {
+        items
             .into_iter()
-            .map(|word| CompletionItem {
-                label: word,
-                kind: Some(CompletionItemKind::VARIABLE),
-                ..CompletionItem::default()
+            .map(|item| {
+                let kind = match item.kind {
+                    ScopeCompletionKind::Parameter => CompletionItemKind::VARIABLE,
+
+                    ScopeCompletionKind::Variable => CompletionItemKind::VARIABLE,
+
+                    ScopeCompletionKind::Constant => CompletionItemKind::CONSTANT,
+                };
+
+                CompletionItem {
+                    label: item.name,
+                    kind: Some(kind),
+                    detail: Some(item.ty),
+                    ..CompletionItem::default()
+                }
             })
             .collect()
     })
