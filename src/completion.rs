@@ -1,5 +1,5 @@
 use nxd_language::frontend::completion::{
-    LanguageCompletionKind, ScopeCompletionKind, completion_words,
+    LanguageCompletionKind, ScopeCompletionKind, completion_type_compatible, completion_words,
     expected_binary_type_at_position, function_completion_words, member_completion_words,
     object_initializer_completion_words, scope_completion_words,
 };
@@ -68,6 +68,12 @@ pub fn nxd_scope_completion_items(
     scope_completion_words(source, line, column).map(|items| {
         items
             .into_iter()
+            .filter(|item| {
+                expected_type
+                    .as_deref()
+                    .map(|expected| completion_type_compatible(expected, &item.ty))
+                    .unwrap_or(true)
+            })
             .map(|item| {
                 let kind = match item.kind {
                     ScopeCompletionKind::Parameter => CompletionItemKind::VARIABLE,
@@ -105,6 +111,12 @@ pub fn nxd_function_completion_items(
     function_completion_words(source, line, column).map(|functions| {
         functions
             .into_iter()
+            .filter(|function| {
+                expected_type
+                    .as_deref()
+                    .map(|expected| completion_type_compatible(expected, &function.return_type))
+                    .unwrap_or(true)
+            })
             .map(|function| {
                 let params = function.params.join(", ");
 

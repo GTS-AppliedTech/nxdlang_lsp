@@ -7,6 +7,7 @@ use crate::documents::DocumentStore;
 use crate::hover::hover_info_to_lsp;
 
 use nxd_language::diagnostics::validation::validate_source;
+use nxd_language::frontend::completion::expected_binary_type_at_position;
 use nxd_language::frontend::hover::hover_at;
 
 use tower_lsp_server::jsonrpc::Result;
@@ -117,6 +118,8 @@ impl LanguageServer for Backend {
         let items: Vec<CompletionItem> = nxd_member_completion_items(&source, line, column)
             .or_else(|| nxd_object_initializer_completion_items(&source, line, column))
             .unwrap_or_else(|| {
+                let expected_type = expected_binary_type_at_position(&source, line, column);
+
                 let mut items =
                     nxd_scope_completion_items(&source, line, column).unwrap_or_default();
 
@@ -124,7 +127,9 @@ impl LanguageServer for Backend {
                     nxd_function_completion_items(&source, line, column).unwrap_or_default(),
                 );
 
-                items.extend(nxd_completion_items());
+                if expected_type.is_none() {
+                    items.extend(nxd_completion_items());
+                }
 
                 items
             });
