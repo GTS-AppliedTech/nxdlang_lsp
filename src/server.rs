@@ -123,11 +123,11 @@ impl LanguageServer for Backend {
                 let mut items =
                     nxd_scope_completion_items(&source, line, column).unwrap_or_default();
 
-                items.extend(
-                    nxd_function_completion_items(&source, line, column).unwrap_or_default(),
-                );
-
                 if expected_type.is_none() {
+                    items.extend(
+                        nxd_function_completion_items(&source, line, column).unwrap_or_default(),
+                    );
+
                     items.extend(nxd_completion_items());
                 }
 
