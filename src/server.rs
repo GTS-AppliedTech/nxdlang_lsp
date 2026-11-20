@@ -1,6 +1,6 @@
 use crate::completion::{
-    nxd_completion_items, nxd_member_completion_items, nxd_object_initializer_completion_items,
-    nxd_scope_completion_items,
+    nxd_completion_items, nxd_function_completion_items, nxd_member_completion_items,
+    nxd_object_initializer_completion_items, nxd_scope_completion_items,
 };
 use crate::diagnostics::language_diagnostic_to_lsp;
 use crate::documents::DocumentStore;
@@ -119,6 +119,10 @@ impl LanguageServer for Backend {
             .unwrap_or_else(|| {
                 let mut items =
                     nxd_scope_completion_items(&source, line, column).unwrap_or_default();
+
+                items.extend(
+                    nxd_function_completion_items(&source, line, column).unwrap_or_default(),
+                );
 
                 items.extend(nxd_completion_items());
 

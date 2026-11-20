@@ -1,6 +1,6 @@
 use nxd_language::frontend::completion::{
-    LanguageCompletionKind, ScopeCompletionKind, completion_words, member_completion_words,
-    object_initializer_completion_words, scope_completion_words,
+    LanguageCompletionKind, ScopeCompletionKind, completion_words, function_completion_words,
+    member_completion_words, object_initializer_completion_words, scope_completion_words,
 };
 use tower_lsp_server::ls_types::{CompletionItem, CompletionItemKind};
 
@@ -78,6 +78,34 @@ pub fn nxd_scope_completion_items(
                     label: item.name,
                     kind: Some(kind),
                     detail: Some(item.ty),
+                    ..CompletionItem::default()
+                }
+            })
+            .collect()
+    })
+}
+
+pub fn nxd_function_completion_items(
+    source: &str,
+    line: u32,
+    column: u32,
+) -> Option<Vec<CompletionItem>> {
+    function_completion_words(source, line, column).map(|functions| {
+        functions
+            .into_iter()
+            .map(|function| {
+                let params = function.params.join(", ");
+
+                let detail = if function.is_async {
+                    format!("async ({}) -> {}", params, function.return_type,)
+                } else {
+                    format!("({}) -> {}", params, function.return_type,)
+                };
+
+                CompletionItem {
+                    label: function.name,
+                    kind: Some(CompletionItemKind::FUNCTION),
+                    detail: Some(detail),
                     ..CompletionItem::default()
                 }
             })
